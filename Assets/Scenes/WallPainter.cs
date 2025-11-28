@@ -18,6 +18,9 @@ public class WallPainter : MonoBehaviour
     void OnEnable()
     {
         planeManager.planesChanged += OnPlanesChanged;
+
+        // Bereits existierende Planes einfärben
+        PaintExistingPlanes();
     }
 
     void OnDisable()
@@ -32,22 +35,46 @@ public class WallPainter : MonoBehaviour
         PaintPlanes(args.updated);
     }
 
+    // Alle schon vorhandenen Planes durchgehen
+    private void PaintExistingPlanes()
+    {
+        foreach (var plane in planeManager.trackables)
+        {
+            PaintPlane(plane);
+        }
+    }
+
     private void PaintPlanes(IEnumerable<ARPlane> planes)
     {
         foreach (var plane in planes)
         {
-            // Nur vertikale Flächen / Wände
-            if(plane.alignment == PlaneAlignment.Vertical)
-
-
-            {
-                var renderer = plane.GetComponent<MeshRenderer>();
-                if (renderer != null && wallMaterial != null)
-                {
-                    renderer.material = wallMaterial;
-                }
-            }
+            PaintPlane(plane);
         }
     }
 
+    private void PaintPlane(ARPlane plane)
+    {
+        if (plane == null)
+            return;
+
+        // Debug-Ausgabe, damit du siehst, was erkannt wird
+        Debug.Log($"Plane entdeckt: {plane.trackableId}, Alignment: {plane.alignment}");
+
+        // Nur vertikale Flächen / Wände
+        if (plane.alignment == PlaneAlignment.Vertical)
+        {
+            // Renderer auch in Kindobjekten suchen
+            var renderer = plane.GetComponentInChildren<MeshRenderer>();
+
+            if (renderer != null && wallMaterial != null)
+            {
+                Debug.Log("Vertikale Plane eingefärbt.");
+                renderer.material = wallMaterial;
+            }
+            else
+            {
+                Debug.LogWarning("Kein MeshRenderer oder kein WallMaterial gefunden für vertikale Plane.");
+            }
+        }
+    }
 }
