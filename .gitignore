@@ -1,0 +1,29 @@
+# Unity generierte Ordner
+[Ll]ibrary/
+[Tt]emp/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Oo]bj/
+
+# Benutzer-spezifische Einstellungen
+UserSettings/
+MemoryCaptures/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Visual Studio / Rider / VSCode
+.vs/
+*.csproj
+*.sln
+*.user
+*.unityproj
+*.pidb
+*.suo
+*.tmp
+*.userprefs
+*.booproj
+.idea/
+.vscode/
