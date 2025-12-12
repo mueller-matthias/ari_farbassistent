@@ -64,16 +64,17 @@ public class WallPainter : MonoBehaviour
 
     private bool IsWall(ARPlane plane)
     {
-        if (plane == null)
-            return false;
+        if (plane == null) return false;
 
-        // Alignment muss vertikal sein
+        // Für Android: nur vertikal prüfen
         if (plane.alignment != PlaneAlignment.Vertical)
             return false;
 
-        // Wenn Classification verfügbar ist (v.a. iOS/ARKit), zusätzlich auf "Wall" prüfen
-        // Auf Plattformen ohne Classification ist das meist PlaneClassification.None
-        return plane.classification == PlaneClassification.Wall;
+        // Mini-Flächen ignorieren
+        if (plane.size.x * plane.size.y < 0.02f)
+            return false;
+
+        return true;
     }
 
     private void PaintPlane(ARPlane plane)
