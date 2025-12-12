@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class ARMenuManager : MonoBehaviour
 {
-    [SerializeField] private WallPainter wallPainter;
+    [SerializeField] private WallPainterController wallPainter;
 
     public void PickHex(string hex)
     {
