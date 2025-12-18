@@ -9,5 +9,7 @@ public class ARMenuManager : MonoBehaviour
         if (wallPainter == null) return;
         if (ColorUtility.TryParseHtmlString(hex, out var c))
             wallPainter.SetWallColor(c);
+        Debug.Log("PickHex called: " + hex);
+
     }
 }
