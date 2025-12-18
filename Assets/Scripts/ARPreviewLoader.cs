@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
@@ -12,7 +12,7 @@ public class ARPreviewLoader : MonoBehaviour
 
     public static WallPainter WallPainterInstance { get; private set; }
 
-    IEnumerator Start()
+    public IEnumerator Start()
     {
         if (!loadOnStart) yield break;
 
@@ -22,6 +22,11 @@ public class ARPreviewLoader : MonoBehaviour
             var op = SceneManager.LoadSceneAsync(arSceneName, LoadSceneMode.Additive);
             while (!op.isDone) yield return null;
         }
+
+        // ✅ AR Scene aktiv setzen (wichtig bei Additive)
+        var arScene = SceneManager.GetSceneByName(arSceneName);
+        if (arScene.IsValid() && arScene.isLoaded)
+            SceneManager.SetActiveScene(arScene);
 
         // WallPainter finden (in der AR Szene)
         CacheWallPainter();
