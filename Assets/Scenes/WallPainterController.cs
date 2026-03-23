@@ -11,15 +11,19 @@ public class WallPainterController : MonoBehaviour
 
     private ARPlaneManager planeManager;
 <<<<<<< HEAD
+<<<<<<< HEAD
     private Material runtimeWallMaterial;
 =======
 >>>>>>> 5cb32c9 (correction)
 
+=======
+>>>>>>> 64a478e (AR Projektion verbessert)
     private readonly Dictionary<TrackableId, MeshRenderer> rendererCache = new();
 
     private void Awake()
     {
         planeManager = GetComponent<ARPlaneManager>();
+<<<<<<< HEAD
 <<<<<<< HEAD
         planeManager.requestedDetectionMode = PlaneDetectionMode.Vertical;
 
@@ -37,6 +41,9 @@ public class WallPainterController : MonoBehaviour
         {
             planeManager.requestedDetectionMode = PlaneDetectionMode.Vertical;
         }
+=======
+        planeManager.requestedDetectionMode = PlaneDetectionMode.Vertical;
+>>>>>>> 64a478e (AR Projektion verbessert)
 
         if (wallMaterial == null)
         {
@@ -47,14 +54,13 @@ public class WallPainterController : MonoBehaviour
 
     private void OnEnable()
     {
-        if (planeManager == null) return;
-
         planeManager.planesChanged += OnPlanesChanged;
         PaintExistingPlanes();
     }
 
     private void OnDisable()
     {
+<<<<<<< HEAD
         if (planeManager != null)
 <<<<<<< HEAD
             planeManager.planesChanged -= OnPlanesChanged;
@@ -64,6 +70,9 @@ public class WallPainterController : MonoBehaviour
         }
 >>>>>>> 5cb32c9 (correction)
 
+=======
+        planeManager.planesChanged -= OnPlanesChanged;
+>>>>>>> 64a478e (AR Projektion verbessert)
         rendererCache.Clear();
     }
 
@@ -80,6 +89,7 @@ public class WallPainterController : MonoBehaviour
 
     public void SetWallColor(Color color)
     {
+<<<<<<< HEAD
 <<<<<<< HEAD
         if (runtimeWallMaterial == null)
         {
@@ -104,6 +114,12 @@ public class WallPainterController : MonoBehaviour
 
         wallMaterial.color = color;
 >>>>>>> 5cb32c9 (correction)
+=======
+        if (wallMaterial != null)
+        {
+            wallMaterial.color = color;
+        }
+>>>>>>> 64a478e (AR Projektion verbessert)
     }
 
     private void PaintExistingPlanes()
@@ -116,8 +132,6 @@ public class WallPainterController : MonoBehaviour
 
     private void PaintPlanes(IEnumerable<ARPlane> planes)
     {
-        if (planes == null) return;
-
         foreach (var plane in planes)
         {
             PaintPlane(plane);
@@ -126,6 +140,7 @@ public class WallPainterController : MonoBehaviour
 
     private bool IsWall(ARPlane plane)
     {
+<<<<<<< HEAD
         if (plane == null) return false;
 <<<<<<< HEAD
         if (plane.alignment != PlaneAlignment.Vertical) return false;
@@ -140,10 +155,16 @@ public class WallPainterController : MonoBehaviour
 >>>>>>> 5cb32c9 (correction)
 
         return true;
+=======
+        return plane != null &&
+               plane.alignment == PlaneAlignment.Vertical &&
+               plane.size.x * plane.size.y >= minWallArea;
+>>>>>>> 64a478e (AR Projektion verbessert)
     }
 
     private void PaintPlane(ARPlane plane)
     {
+<<<<<<< HEAD
         if (runtimeWallMaterial == null || plane == null) return;
         if (!IsWall(plane)) return;
 
@@ -159,6 +180,13 @@ public class WallPainterController : MonoBehaviour
 
             rendererCache[plane.trackableId] = renderer;
         }
+=======
+        if (wallMaterial == null || !IsWall(plane))
+            return;
+
+        if (!TryGetRenderer(plane, out var renderer))
+            return;
+>>>>>>> 64a478e (AR Projektion verbessert)
 
 <<<<<<< HEAD
         // sharedMaterial ist hier besser, weil alle dieselbe Runtime-Kopie nutzen sollen
@@ -169,5 +197,24 @@ public class WallPainterController : MonoBehaviour
             renderer.sharedMaterial = wallMaterial;
         }
 >>>>>>> 5cb32c9 (correction)
+    }
+
+    private bool TryGetRenderer(ARPlane plane, out MeshRenderer renderer)
+    {
+        if (rendererCache.TryGetValue(plane.trackableId, out renderer) && renderer != null)
+        {
+            return true;
+        }
+
+        renderer = plane.GetComponentInChildren<MeshRenderer>();
+
+        if (renderer == null)
+        {
+            Debug.LogWarning("WallPainterController: Plane hat keinen MeshRenderer.");
+            return false;
+        }
+
+        rendererCache[plane.trackableId] = renderer;
+        return true;
     }
 }
