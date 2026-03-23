@@ -6,10 +6,21 @@ public class ARMenuManager : MonoBehaviour
 
     public void PickHex(string hex)
     {
-        if (wallPainter == null) return;
-        if (ColorUtility.TryParseHtmlString(hex, out var c))
-            wallPainter.SetWallColor(c);
-        Debug.Log("PickHex called: " + hex);
+        Debug.Log("PickHex called: " + hex, this);
 
+        if (wallPainter == null)
+        {
+            Debug.LogError("ARMenuManager: wallPainter ist nicht gesetzt!", this);
+            return;
+        }
+
+        if (ColorUtility.TryParseHtmlString(hex, out Color c))
+        {
+            wallPainter.SetWallColor(c);
+        }
+        else
+        {
+            Debug.LogError("Ungültiger Hex-Wert: " + hex, this);
+        }
     }
 }

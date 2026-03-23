@@ -1,41 +1,50 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
 
-[RequireComponent(typeof(UnityEngine.XR.ARFoundation.ARPlaneManager))]
+[RequireComponent(typeof(ARPlaneManager))]
 public class WallPainterController : MonoBehaviour
 {
     [SerializeField] private Material wallMaterial;
 
-    private UnityEngine.XR.ARFoundation.ARPlaneManager planeManager;
+    private ARPlaneManager planeManager;
+    private Material runtimeWallMaterial;
 
-    private readonly System.Collections.Generic.Dictionary<
-        UnityEngine.XR.ARSubsystems.TrackableId,
-        UnityEngine.MeshRenderer
-    > rendererCache = new();
+    private readonly Dictionary<TrackableId, MeshRenderer> rendererCache = new();
 
-    void Awake()
+    private void Awake()
     {
-        planeManager = GetComponent<UnityEngine.XR.ARFoundation.ARPlaneManager>();
-
-        planeManager.requestedDetectionMode =
-            UnityEngine.XR.ARSubsystems.PlaneDetectionMode.Vertical;
+        planeManager = GetComponent<ARPlaneManager>();
+        planeManager.requestedDetectionMode = PlaneDetectionMode.Vertical;
 
         if (wallMaterial == null)
-            Debug.LogWarning("WallPainterController: Wall-Material fehlt!");
+        {
+            Debug.LogError("WallPainterController: wallMaterial fehlt!", this);
+            return;
+        }
+
+        // Eigene Runtime-Kopie erzeugen
+        runtimeWallMaterial = new Material(wallMaterial);
     }
 
-    void OnEnable()
+    private void OnEnable()
     {
+        if (planeManager == null) return;
+
         planeManager.planesChanged += OnPlanesChanged;
         PaintExistingPlanes();
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
-        planeManager.planesChanged -= OnPlanesChanged;
+        if (planeManager != null)
+            planeManager.planesChanged -= OnPlanesChanged;
+
         rendererCache.Clear();
     }
 
-    void OnPlanesChanged(UnityEngine.XR.ARFoundation.ARPlanesChangedEventArgs args)
+    private void OnPlanesChanged(ARPlanesChangedEventArgs args)
     {
         PaintPlanes(args.added);
         PaintPlanes(args.updated);
@@ -49,8 +58,23 @@ public class WallPainterController : MonoBehaviour
 
     public void SetWallColor(Color color)
     {
-        if (wallMaterial == null) return;
-        wallMaterial.color = color;
+        if (runtimeWallMaterial == null)
+        {
+            Debug.LogError("SetWallColor: runtimeWallMaterial ist NULL!", this);
+            return;
+        }
+
+        // Für Standard-Shader
+        if (runtimeWallMaterial.HasProperty("_Color"))
+            runtimeWallMaterial.SetColor("_Color", color);
+
+        // Für URP/HDRP/Lit
+        if (runtimeWallMaterial.HasProperty("_BaseColor"))
+            runtimeWallMaterial.SetColor("_BaseColor", color);
+
+        Debug.Log("Neue Wandfarbe gesetzt: " + color, this);
+
+        // sicherheitshalber allen vorhandenen Planes erneut zuweisen
         PaintExistingPlanes();
     }
 
@@ -60,42 +84,42 @@ public class WallPainterController : MonoBehaviour
             PaintPlane(plane);
     }
 
-    private void PaintPlanes(System.Collections.Generic.IEnumerable<UnityEngine.XR.ARFoundation.ARPlane> planes)
+    private void PaintPlanes(IEnumerable<ARPlane> planes)
     {
         if (planes == null) return;
+
         foreach (var plane in planes)
             PaintPlane(plane);
     }
 
-    private bool IsWall(UnityEngine.XR.ARFoundation.ARPlane plane)
+    private bool IsWall(ARPlane plane)
     {
         if (plane == null) return false;
-
-        if (plane.alignment != UnityEngine.XR.ARSubsystems.PlaneAlignment.Vertical)
-            return false;
-
-        if (plane.size.x * plane.size.y < 0.02f)
-            return false;
+        if (plane.alignment != PlaneAlignment.Vertical) return false;
+        if (plane.size.x * plane.size.y < 0.02f) return false;
 
         return true;
     }
 
-    private void PaintPlane(UnityEngine.XR.ARFoundation.ARPlane plane)
+    private void PaintPlane(ARPlane plane)
     {
-        if (wallMaterial == null || plane == null) return;
+        if (runtimeWallMaterial == null || plane == null) return;
         if (!IsWall(plane)) return;
 
         if (!rendererCache.TryGetValue(plane.trackableId, out var renderer) || renderer == null)
         {
-            renderer = plane.GetComponentInChildren<UnityEngine.MeshRenderer>();
+            renderer = plane.GetComponentInChildren<MeshRenderer>();
+
             if (renderer == null)
             {
-                Debug.LogWarning("WallPainterController: Plane hat keinen MeshRenderer.");
+                Debug.LogWarning("WallPainterController: Plane hat keinen MeshRenderer.", plane);
                 return;
             }
+
             rendererCache[plane.trackableId] = renderer;
         }
 
-        renderer.material = wallMaterial;
+        // sharedMaterial ist hier besser, weil alle dieselbe Runtime-Kopie nutzen sollen
+        renderer.sharedMaterial = runtimeWallMaterial;
     }
 }
